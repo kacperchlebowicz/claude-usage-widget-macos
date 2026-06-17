@@ -1,13 +1,13 @@
 # Claude Usage Widget (macOS)
 
+![Claude Usage widget on the macOS desktop](docs/banner.jpg)
+
 A native macOS **desktop widget** that shows your Claude subscription usage — your
 **5-hour session** window and your **weekly** window — right on the desktop, next
 to Battery and Weather.
 
 It reads the usage numbers Claude Code already has access to (via the OAuth token
 in your Keychain) and draws them as two simple bars with live reset countdowns.
-
-<!-- Add a screenshot here, e.g. ./docs/screenshot.png -->
 
 ## What it shows
 
