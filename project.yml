@@ -1,0 +1,46 @@
+name: ClaudeUsage
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    # Local-only signing. Set DEVELOPMENT_TEAM via -allowProvisioningUpdates at
+    # build time, or override here with your free Apple ID team id.
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  ClaudeUsage:
+    type: application
+    platform: macOS
+    sources:
+      - app
+      - Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.ClaudeUsage
+        CODE_SIGN_ENTITLEMENTS: app/ClaudeUsage.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Claude Usage
+        INFOPLIST_KEY_LSUIElement: NO
+    dependencies:
+      - target: ClaudeUsageWidget
+
+  ClaudeUsageWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - widget
+      - Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.ClaudeUsage.Widget
+        CODE_SIGN_ENTITLEMENTS: widget/ClaudeUsageWidget.entitlements
+        INFOPLIST_FILE: widget/Info.plist
+        ENABLE_HARDENED_RUNTIME: YES

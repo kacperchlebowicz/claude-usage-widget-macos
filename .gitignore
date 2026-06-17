@@ -1,0 +1,9 @@
+# Xcode / build
+ClaudeUsage.xcodeproj/
+build/
+DerivedData/
+*.xcuserstate
+.DS_Store
+
+# Generated/installed artifacts
+*.log
