@@ -1,0 +1,104 @@
+name: Build & Release
+
+# Builds the widget on a macOS runner (which already has Xcode) and attaches a
+# ready-to-run .dmg to a GitHub Release. End users download the .dmg and run it
+# — no Xcode, no Apple Developer account. The app is ad-hoc signed, so on first
+# launch macOS Gatekeeper shows a warning: right-click the app → Open (once).
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version label for the build (e.g. v1.0.0)"
+        required: false
+        default: "dev"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build (Release, ad-hoc signed)
+        run: |
+          xcodebuild -project ClaudeUsage.xcodeproj \
+            -scheme ClaudeUsage \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="-" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            DEVELOPMENT_TEAM="" \
+            CODE_SIGNING_REQUIRED=YES \
+            CODE_SIGNING_ALLOWED=YES \
+            build
+
+      - name: Package .dmg
+        id: pkg
+        run: |
+          VERSION="${{ steps.ver.outputs.version }}"
+          APP="build/Build/Products/Release/ClaudeUsage.app"
+          DMG="ClaudeUsage-${VERSION}.dmg"
+          STAGE="$(mktemp -d)/dmg"
+          mkdir -p "$STAGE/Helper/helper" "$STAGE/Helper/LaunchAgents"
+
+          # the app/widget + an Applications shortcut to drag onto
+          cp -R "$APP" "$STAGE/"
+          ln -s /Applications "$STAGE/Applications"
+
+          # bundle the data helper so users don't need to clone the repo
+          cp install.sh uninstall.sh "$STAGE/Helper/"
+          cp helper/claude-usage-helper.py "$STAGE/Helper/helper/"
+          cp LaunchAgents/*.plist.template "$STAGE/Helper/LaunchAgents/"
+
+          # double-click installer for the helper (install.sh uses its own dir)
+          cat > "$STAGE/Helper/Install Helper.command" <<'EOF'
+          #!/bin/bash
+          cd "$(dirname "$0")" || exit 1
+          ./install.sh
+          echo
+          read -n 1 -s -r -p "Done — press any key to close this window."
+          EOF
+          chmod +x "$STAGE/Helper/Install Helper.command" \
+                   "$STAGE/Helper/install.sh" \
+                   "$STAGE/Helper/uninstall.sh"
+
+          hdiutil create -volname "Claude Usage" \
+            -srcfolder "$STAGE" -ov -format UDZO "$DMG"
+          echo "dmg=$DMG" >> "$GITHUB_OUTPUT"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClaudeUsage-${{ steps.ver.outputs.version }}
+          path: ${{ steps.pkg.outputs.dmg }}
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.ver.outputs.version }}" \
+            "${{ steps.pkg.outputs.dmg }}" \
+            --title "${{ steps.ver.outputs.version }}" \
+            --generate-notes
