@@ -20,9 +20,18 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        # xcodegen emits a current-format project; match it to the newest Xcode
+        # on the runner (the default may be older and fail to open it).
+        run: |
+          latest="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)"
+          echo "Using $latest"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          xcodebuild -version
 
       - name: Resolve version
         id: ver
