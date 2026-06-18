@@ -47,13 +47,33 @@ Keychain ──▶ helper.py ──▶ usage.json ──▶ Widget
 - macOS 14+ (desktop widgets)
 - **Claude Code** installed and signed in (the helper reads the token it stores in
   your Keychain under the item `Claude Code-credentials`)
-- Full **Xcode** (not just Command Line Tools) to build the widget
-- [`xcodegen`](https://github.com/yonyz/XcodeGen) — `brew install xcodegen`
 
-No paid Apple Developer account needed: the build is **ad-hoc signed** to run
-locally.
+No paid Apple Developer account is needed either way — prebuilt releases and local
+builds are both **ad-hoc signed** to run locally.
 
 ## Install
+
+### Option A — download a prebuilt release (no Xcode)
+
+Everything is in one download — no repo clone, no Xcode.
+
+1. Grab the latest `ClaudeUsage-*.dmg` from the
+   [**Releases**](../../releases/latest) page and open it.
+2. Drag **Claude Usage** into **Applications**.
+   Because the app is ad-hoc signed (not notarized), macOS Gatekeeper blocks the
+   first launch — **right-click the app → Open**, then confirm. You only do this
+   once.
+3. In the same `.dmg`, open the **Helper** folder and double-click
+   **Install Helper.command** — it installs the background updater that feeds the
+   widget its numbers. If macOS blocks it, **right-click → Open**. It asks for
+   Keychain access once → click **Always Allow**.
+4. Right-click the desktop → **Edit Widgets** → search **Claude Usage** → drag it
+   onto the desktop.
+
+### Option B — build from source (needs Xcode)
+
+Requires full **Xcode** (not just Command Line Tools) and
+[`xcodegen`](https://github.com/yonyz/XcodeGen) (`brew install xcodegen`).
 
 ```bash
 # 1. Helper + LaunchAgent (works immediately, no Xcode needed)
