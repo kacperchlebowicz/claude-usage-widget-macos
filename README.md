@@ -127,6 +127,24 @@ rm -rf /Applications/ClaudeUsage.app
   one-time "wants to use your keychain" prompt. Click **Always Allow** once.
 - Logs: `~/Library/Logs/ClaudeUsageWidget/`.
 
+## Troubleshooting
+
+**There's no key or token to enter** — the helper reads your existing Claude Code
+login from the Keychain, so each user automatically sees their own data. If the
+widget is **empty or stuck on placeholder numbers**, work down this list:
+
+1. **Is Claude Code installed and signed in?** Run `claude` in a terminal and make
+   sure you're logged in. The login is what stores the token the helper reads; with
+   no token, no data is written.
+2. **Did the helper run?** Re-run `Helper/Install Helper.command` (or `./install.sh`).
+   It fetches once immediately and then every 5 minutes.
+3. **Check the log** at `~/Library/Logs/ClaudeUsageWidget/helper.err.log` — it names
+   the exact failure (e.g. `keychain read failed` → not signed in to Claude Code).
+4. **Keychain prompt** — the first run may ask to use your Keychain. Click
+   **Always Allow**; otherwise the helper can't read the token.
+5. **Widget not refreshing** — WidgetKit redraws on its own (~10 min) even though the
+   data under it updates every 5 min; remove and re-add the widget to force a redraw.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
